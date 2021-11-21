@@ -19,16 +19,22 @@ def connect_to_server(server_ip):
 
 
 def upload():
-    pass
+    file_path = input("[+] Please enter the file anme\n>>> ")
+    s.send(file_path.encode())
+
+    with open(file_path, 'rb') as f:
+        l = f.read(1024)
+        while l:
+            s.send(l)
+            l = f.read(1024)
 
 
 def download():
     file_name = input("[+] Please enter the file anme\n>>> ")
-    print(file_name)
+    
     s.send(file_name.encode())
 
-    with open(file_name, 'wb') as f:
-        
+    with open(file_name, 'wb') as f:        
         while True:
             data = s.recv(1024)
             
@@ -40,13 +46,8 @@ def download():
 
 def list_files():
     pass
-"""
-my_socket.send('menachem'.encode())
-data = my_socket.recv(4024).decode()
-print(f"The server sent {data}")
 
-my_socket.close()
-"""
+
 
 if __name__ == "__main__":
     print("[+] Welcome to FTP Client\n")
@@ -68,4 +69,3 @@ if __name__ == "__main__":
 
         if commend == '3':
             list_files()
-
