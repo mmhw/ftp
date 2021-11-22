@@ -1,55 +1,100 @@
 import socket
 import sys
 
-
+SIZE = 1024
 PORT = 12345
-
-s = socket.socket()
+my_socket = socket.socket()
 
 
 def connect_to_server(server_ip):
     try:
-        s.connect((server_ip, PORT))
+        my_socket.connect((server_ip, PORT))
         print("[+] connection successful")
         return 1
     
     except:
+        print("[!] connection unsuccessful")
         sys.exit()
-        print("[+] connection successful")
+
+
+def cli():
+    commend = input("\n[+] press 1 to upload file\n"
+                      "[+] press 2 to download file\n"
+                      "[+] press 3 to list all files\n"
+                      "[+] press 4 to exit\n>>> ")
+    
+    if commend == '1':
+        upload()
+
+    if commend == '2':
+        download()
+
+    if commend == '3':
+        list_files()
+    
+    if commend == '4':
+        exit()
 
 
 def upload():
-    file_path = input("[+] Please enter the file anme\n>>> ")
-    s.send(file_path.encode())
+    file_path = input("[+] Please enter the file path\n>>> ")
+    
+    my_socket.send(b'upload')
+    my_socket.send(file_path.encode())
 
     with open(file_path, 'rb') as f:
-        l = f.read(1024)
-        while l:
-            s.send(l)
-            l = f.read(1024)
+        data = f.read(SIZE)
+        
+        while data:
+            my_socket.send(data)
+            data = f.read(SIZE)
+    
+    print('successful')
+    
+    cli()
 
 
 def download():
     file_name = input("[+] Please enter the file anme\n>>> ")
     
-    s.send(file_name.encode())
+    my_socket.send(b'download')
+    my_socket.send(file_name.encode())
 
     with open(file_name, 'wb') as f:        
         while True:
-            data = s.recv(1024)
+            data = my_socket.recv(SIZE)
             
             if not data:
                 break
 
             f.write(data)
+    
+    print('successful')
+
+    cli()
 
 
 def list_files():
-    pass
+    my_socket.send(b'list')
+    
+    while True:
+        data = my_socket.recv(SIZE)
+        
+        if not data:
+            break
+
+        print(data)
+    
+    cli()
 
 
+def exit():
+    print("[!] goodbye!")
+    
+    my_socket.close()
 
-if __name__ == "__main__":
+
+if __name__=="__main__":
     print("[+] Welcome to FTP Client\n")
 
     if len(sys.argv) < 2:
@@ -59,13 +104,4 @@ if __name__ == "__main__":
         server_ip = sys.argv[1]
         connect_to_server(server_ip)
 
-        commend = input("\n[+] If you want to upload file press 1\n[+] If you want to download file press 2\n[+] If you want to list all files press 3\n>>> ")
-
-        if commend == '1':
-            upload()
-
-        if commend == '2':
-            download()
-
-        if commend == '3':
-            list_files()
+        cli()
