@@ -24,7 +24,12 @@ while True:
             f.write(data)                
 
     elif command == 'download':
-        pass
+        with open(file_name, 'rb') as f:
+            data = f.read(SIZE)
+
+            while data:
+                client_socket.send(data)
+                data = f.read(SIZE)
 
     elif command == 'list':
         pass
