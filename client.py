@@ -6,57 +6,78 @@ PORT = 12345
 my_socket = socket.socket()
 
 
-def connect_to_server(server_ip):
-    try:
-        my_socket.connect((server_ip, PORT))
-        print("[+] connection successful")
-        return 1
+def connect_to_server():
+    commend = input("[+] to connect press 'connect' and the IP address\n"
+                                ">>> ")
+    if len(commend.split(' ')) > 1 and commend.split(' ')[0] == 'connect':
+        connect, server_ip = commend.split(' ')
+        try:
+            my_socket.connect((server_ip, PORT))
+            print("[+] connection successful")
+            return 1
     
-    except:
-        print("[!] connection unsuccessful")
-        sys.exit()
+        except:
+            print("[!] connection unsuccessful")
+            sys.exit()
+    
+    else:
+        print("[!] Try again")
+        connect_to_server()
 
 
 def cli():
-    commend = input("\n[+] press 1 to upload file\n"
-                      "[+] press 2 to download file\n"
-                      "[+] press 3 to list all files\n"
-                      "[+] press 4 to exit\n>>> ")
+    commend = input("\n[+] to upload press 'upload' and the file path\n"
+                    "[+] to download press 'download' and the file name \n"
+                    "[+] to list all files press 'list'\n"
+                    ">>> ")
     
-    if commend == '1':
-        upload()
-
-    if commend == '2':
-        download()
-
-    if commend == '3':
+    if len(commend.split(' ')) == 1 and commend == 'list':
         list_files()
-    
-    if commend == '4':
-        exit()
+
+    elif len(commend.split(' ')) > 1:
+        comm , file_path = commend.split(' ')
+            
+        if comm == 'upload':
+            upload(file_path)
+
+        elif comm == 'download':
+            download(file_path)
+
+        elif comm == 'list':
+            list_files()
+
+        else:
+            print("[!] Unknown command")
+            cli()
+
+    else:
+        print("[!] Unknown command")
+        cli()
 
 
-def upload():
-    file_path = input("[+] Please enter the file path\n>>> ")
-    
+def upload(file_path):    
     my_socket.send(b'upload')
     my_socket.send(file_path.encode())
 
-    with open(file_path, 'rb') as f:
-        data = f.read(SIZE)
-        
-        while data:
-            my_socket.send(data)
+    try:
+        with open(file_path, 'rb') as f:
             data = f.read(SIZE)
+        
+            while data:
+                my_socket.send(data)
+                data = f.read(SIZE)
     
-    print('successful')
-    
-    cli()
+        print("[!] successful")
+
+        cli()
+
+    except:
+        print("[!] Bad file path")
+
+        cli()
 
 
-def download():
-    file_name = input("[+] Please enter the file anme\n>>> ")
-    
+def download(file_name):  
     my_socket.send(b'download')
     my_socket.send(file_name.encode())
 
@@ -87,21 +108,10 @@ def list_files():
     
     cli()
 
-
-def exit():
-    print("[!] goodbye!")
     
-    my_socket.close()
-
-
 if __name__=="__main__":
     print("[+] Welcome to FTP Client\n")
+    
+    connect_to_server()
 
-    if len(sys.argv) < 2:
-        print("Next time please enter IP address")
-
-    else:
-        server_ip = sys.argv[1]
-        connect_to_server(server_ip)
-
-        cli()
+    cli()
