@@ -7,10 +7,12 @@ my_socket = socket.socket()
 
 
 def connect_to_server():
-    commend = input("[+] to connect press 'connect' and the IP address\n"
-                                ">>> ")
+    commend = input("[+] to connect press 'connect' and the IP address\n>>> ")
+
     if len(commend.split(' ')) > 1 and commend.split(' ')[0] == 'connect':
-        connect, server_ip = commend.split(' ')
+        connect = commend.split(' ')[0]
+        server_ip = commend.split(' ')[1]
+        
         try:
             my_socket.connect((server_ip, PORT))
             print("[+] connection successful")
@@ -35,7 +37,8 @@ def cli():
         list_files()
 
     elif len(commend.split(' ')) > 1:
-        comm , file_path = commend.split(' ')
+        comm = commend.split(' ')[0] 
+        file_path = commend.split(' ')[1]
             
         if comm == 'upload':
             upload(file_path)
@@ -55,60 +58,45 @@ def cli():
         cli()
 
 
-def upload(file_path):    
+def upload(file_path):
     my_socket.send(b'upload')
     my_socket.send(file_path.encode())
-
-    try:
-        with open(file_path, 'rb') as f:
-            data = f.read(SIZE)
-        
-            while data:
-                my_socket.send(data)
-                data = f.read(SIZE)
     
-        print("[!] successful")
+    with open(file_path, 'rb') as f:
+        data = f.read(SIZE)
+        
+        while data:
+            my_socket.send(data)
+            data = f.read(SIZE)
+    
+    my_socket.close()
+    print("[!] successful\n")
 
-        cli()
-
-    except:
-        print("[!] Bad file path")
-
-        cli()
+    connect_to_server()
 
 
 def download(file_name):  
     my_socket.send(b'download')
     my_socket.send(file_name.encode())
 
-    with open(file_name, 'wb') as f:        
-        while True:
-            data = my_socket.recv(SIZE)
-            
-            if not data:
-                break
+    with open(f'/home/david/mefathim4/socket/client/{file_name}', 'wb') as f:
+        data = my_socket.recv(SIZE)
 
-            f.write(data)
+        f.write(data)
+
+    print('[!] successful\n')
+    connect_to_server()
     
-    print('successful')
-
-    cli()
-
 
 def list_files():
     my_socket.send(b'list')
     
-    while True:
-        data = my_socket.recv(SIZE)
-        
-        if not data:
-            break
-
-        print(data)
+    data = my_socket.recv(SIZE).decode()
+    print(f'list of the files:\n{data}\n')
     
-    cli()
+    connect_to_server()
 
-    
+
 if __name__=="__main__":
     print("[+] Welcome to FTP Client\n")
     
